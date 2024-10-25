@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Rescue MapNet</title>
+    <!-- The two divs below implements leaflet.js, order matters --> 
+    <link rel="stylesheet" href="leaflet.css" />
+    <script src="leaflet.js"></script>
+    <script src="node_modules/geojson-vt/geojson-vt.js"></script>
+</head>
+
+<body>
+    <div id="map" style="height: 500px;"></div>
+    <script>
+        var map = L.map('map').setView([42.3913, -72.5280], 10);
+
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+        
+        var polygon = L.polygon([
+            [51.509, -0.08],
+            [51.503, -0.06],
+            [51.51, -0.047]
+        ]).addTo(map);
+    </script>
+
+</body>
+
+</html>
