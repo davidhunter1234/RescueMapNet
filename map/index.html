@@ -1,29 +1,121 @@
+<!-- Rescue MapNet Map Interface-->
+
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Rescue MapNet</title>
-    <!-- The two divs below implements leaflet.js, order matters --> 
+    <style type="text/css">body { margin: 0; padding: 0; } html, body, #map { width: 100%; height: 100vw; }</style>
+    <!-- Leaflet CSS and JS -->
     <link rel="stylesheet" href="leaflet.css" />
     <script src="leaflet.js"></script>
-    <script src="node_modules/geojson-vt/geojson-vt.js"></script>
+    <!-- Leaflet.draw CSS and JS -->
+    <link rel="stylesheet" href="leaflet.draw.css" />
+    <script src="leaflet.draw.js"></script>
 </head>
 
 <body>
-    <div id="map" style="height: 500px;"></div>
+    <!-- Initialize map object -->
+    <div id="map"></div>
+    
+    <!-- Javascript to perform actions-->
     <script>
-        var map = L.map('map').setView([42.3913, -72.5280], 10);
+    
+        // Define the two tile layers
+        var aerialLayer = L.tileLayer('./aerial/{z}/{x}/{y}.png', {
+            minZoom: 0, 
+            maxZoom: 17, 
+            tms: false, 
+            attribution: 'Aerial Imagery © MassGIS'
+        });
+        var topoLayer = L.tileLayer('./topo/{z}/{x}/{y}.jpg', {
+            minZoom: 0, 
+            maxZoom: 17, 
+            tms: false, 
+            attribution: 'Topographic Map © OpenTopoMap'
+        });
 
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        }).addTo(map);
-        
+        // Setting map center, zoom, drawControl, and default layer
+        var map = L.map('map', {
+            center: [42.3830, -72.5280],
+            zoom: 15,
+            maxZoom: 17,
+            layers: [aerialLayer]
+        });
+
+        // Layer control to toggle between basemaps
+        var baseMaps = {
+            "Aerial": aerialLayer,
+            "Topographic": topoLayer
+        };
+
+        var layerControl= L.control.layers(baseMaps).addTo(map);
+
+        // Draw Feature
+        var drawnItems = new L.FeatureGroup();
+        map.addLayer(drawnItems);
+
+        var drawControl = new L.Control.Draw({
+            draw: {
+            polyline: true,
+            polygon: true,
+            circle: false,
+            marker: true
+            },
+            edit: {
+                featureGroup: drawnItems
+            }
+        });
+        map.addControl(drawControl);
+
+        // Event listener for when a shape is created 
+        map.on(L.Draw.Event.CREATED, function (e) {
+            var type = e.layerType,
+                layer = e.layer,
+                content = '';
+
+            if (type === 'marker') {
+                var latlng = layer.getLatLng();
+                content = `Marker point: [${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)}]`;
+            } else if (type === 'polygon' || type === 'rectangle') {
+                var latlngs = layer.getLatLngs()[0]; // For polygons and rectangles
+                content = `${type.charAt(0).toUpperCase() + type.slice(1)} points: `;
+                var coords = latlngs.map(function(latlng) {
+                    return `[${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)}]`;
+                });
+                content += coords.join(', ');
+
+            } else if (type === 'polyline') {
+                var latlngs = layer.getLatLngs();
+                content = 'Polyline points: ';
+                var coords = latlngs.map(function(latlng) {
+                    return `[${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)}]`;
+                });
+                content += coords.join(', ');
+            }
+
+            layer.bindPopup(content);
+
+            drawnItems.addLayer(layer);
+        });
+
+        // example of manually adding a polygon
         var polygon = L.polygon([
-            [51.509, -0.08],
-            [51.503, -0.06],
-            [51.51, -0.047]
+            [42.3874, -72.5367], 
+            [42.3933, -72.5367], 
+            [42.3933, -72.5330], 
+            [42.3874, -72.5330]
         ]).addTo(map);
+
+        var polygon = L.polyline([
+            [42.3955, -72.5265], [42.3961, -72.5244], [42.3951, -72.5235], 
+            [42.3938, -72.5235], [42.3927, -72.5236], [42.3915, -72.5229], 
+            [42.3912, -72.5227], [42.3915, -72.5210], [42.3911, -72.5212], 
+            [42.3906, -72.5197], [42.3923, -72.5202]
+        ]).addTo(map);
+
     </script>
 
 </body>
