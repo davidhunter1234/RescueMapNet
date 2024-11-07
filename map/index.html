@@ -14,6 +14,8 @@
     <!-- Leaflet.draw CSS and JS -->
     <link rel="stylesheet" href="leaflet.draw.css" />
     <script src="leaflet.draw.js"></script>
+    <!-- Leaflet.buffer JS -->
+    <script src="leaflet.buffer.min.js"></script>
 </head>
 
 <body>
@@ -30,11 +32,17 @@
             tms: false, 
             attribution: 'Aerial Imagery © MassGIS'
         });
-        var topoLayer = L.tileLayer('./topo/{z}/{x}/{y}.jpg', {
+        var topoLayer = L.tileLayer('./topo/{z}/{x}/{y}.png', {
             minZoom: 0, 
             maxZoom: 17, 
             tms: false, 
             attribution: 'Topographic Map © OpenTopoMap'
+        });
+        var openStreetMapsLayer = L.tileLayer('./streetMap/{z}/{x}/{y}.png', {
+            minZoom: 0, 
+            maxZoom: 17, 
+            tms: false, 
+            attribution: 'Street Map © OpenStreetMaps'
         });
 
         // Setting map center, zoom, drawControl, and default layer
@@ -48,7 +56,8 @@
         // Layer control to toggle between basemaps
         var baseMaps = {
             "Aerial": aerialLayer,
-            "Topographic": topoLayer
+            "Topographic": topoLayer,
+            "Street": openStreetMapsLayer
         };
 
         var layerControl= L.control.layers(baseMaps).addTo(map);
@@ -61,11 +70,16 @@
             draw: {
             polyline: true,
             polygon: true,
-            circle: false,
+            circle: true,
             marker: true
             },
             edit: {
-                featureGroup: drawnItems
+                featureGroup: drawnItems,
+                remove: true,
+                buffer: {
+                    replacePolylines: false,
+                    separateBuffer: false,
+                },
             }
         });
         map.addControl(drawControl);
@@ -100,6 +114,42 @@
 
             drawnItems.addLayer(layer);
         });
+
+        // load and display coordinates from 'load.txt'
+        function loadCoordinates() {
+            fetch('load.txt')
+                .then(response => response.text())
+                .then(text => {
+                    const coordinates = text.trim().split('\n').map(line => {
+                        const [lat, lng] = line.split(',').map(Number);
+                        return [lat, lng];
+                    });
+                    console.log(coordinates); // check if coordinates are parsed correctly
+
+                    // remove any existing polyline (if needed)
+                    if (window.currentPolyline) {
+                        map.removeLayer(window.currentPolyline);
+                    }
+
+                    // add the new polyline to the map
+                    window.currentPolyline = L.polyline(coordinates, { color: 'blue' }).addTo(map);
+                    map.fitBounds(window.currentPolyline.getBounds());
+                })
+                .catch(error => console.error('Error loading coordinates:', error));
+        }
+
+        // periodically reload coordinates
+        let counter = 0;
+        const maxRuns = 2; // test for 2 rounds update
+
+        const intervalId = setInterval(() => {
+            loadCoordinates();
+            counter++;
+            if (counter >= maxRuns) {
+                clearInterval(intervalId); 
+            }
+        }, 5000); // run every 5 seconds
+
 
         // example of manually adding a polygon
         var polygon = L.polygon([
