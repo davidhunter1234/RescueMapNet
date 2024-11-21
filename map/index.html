@@ -7,7 +7,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Rescue MapNet</title>
-    <style type="text/css">body { margin: 0; padding: 0; } html, body, #map { width: 100%; height: 100vw; }</style>
+    <!-- <style type="text/css">body { margin: 0; padding: 0; } html, body, #map { width: 100%; height: 100vw; }</style> -->
+    <style type="text/css">
+        html, body, #map {
+            width: 100%;
+            height: 100vh; /* Use viewport height */
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevent scrollbars */
+        }
+    </style>
     <!-- Leaflet CSS and JS -->
     <link rel="stylesheet" href="leaflet.css" />
     <script src="leaflet.js"></script>
@@ -50,7 +59,8 @@
             center: [42.3830, -72.5280],
             zoom: 15,
             maxZoom: 17,
-            layers: [aerialLayer]
+            layers: [aerialLayer],
+            keyboard: true,
         });
 
         // Layer control to toggle between basemaps
@@ -61,6 +71,11 @@
         };
 
         var layerControl= L.control.layers(baseMaps).addTo(map);
+
+        // Ensure the map responds to keyboard input immediately
+        window.onload = function() {
+            document.getElementById('map').focus();
+        };
 
         // Draw Feature
         var drawnItems = new L.FeatureGroup();
@@ -165,6 +180,8 @@
             [42.3912, -72.5227], [42.3915, -72.5210], [42.3911, -72.5212], 
             [42.3906, -72.5197], [42.3923, -72.5202]
         ]).addTo(map);
+
+
 
     </script>
 
