@@ -34,7 +34,7 @@
     <!-- Javascript to perform actions-->
     <script>
     
-        // Define the two tile layers
+        // Define the three tile layers
         var aerialLayer = L.tileLayer('./aerial/{z}/{x}/{y}.png', {
             minZoom: 0, 
             maxZoom: 17, 
@@ -148,7 +148,7 @@
 
                     // add the new polyline to the map
                     window.currentPolyline = L.polyline(coordinates, { color: 'blue' }).addTo(map);
-                    map.fitBounds(window.currentPolyline.getBounds());
+                    //map.fitBounds(window.currentPolyline.getBounds());
                 })
                 .catch(error => console.error('Error loading coordinates:', error));
         }
